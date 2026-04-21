@@ -18,9 +18,11 @@ export function parseWeekCoverage(
   ca: Ca,
   totalWeeks: number,
   excludedWeeks: number[] = [],
+  ltTh = '',
 ): WeekCoverageParseResult {
   const sourceNote = note.trim()
   const allWeeks = buildAllWeeks(totalWeeks)
+  const normalizedTeachingMode = normalizeTeachingMode(ltTh)
 
   if (!sourceNote) {
     return {
@@ -41,7 +43,7 @@ export function parseWeekCoverage(
   let neutralMatch = false
 
   for (const clause of clauses) {
-    const result = parseClause(clause, ca, totalWeeks)
+    const result = parseClause(clause, ca, totalWeeks, normalizedTeachingMode)
 
     if (result.warning) {
       infoMessages.push(result.warning)
@@ -102,7 +104,12 @@ export function parseWeekCoverage(
   }
 }
 
-function parseClause(clause: string, ca: Ca, totalWeeks: number): ClauseResult {
+function parseClause(
+  clause: string,
+  ca: Ca,
+  totalWeeks: number,
+  teachingMode: 'lt' | 'th' | null,
+): ClauseResult {
   const normalized = normalizeForMatching(clause)
   const allWeeks = buildAllWeeks(totalWeeks)
   const subtractors = [...normalized.matchAll(/nghi tuan\s+([0-9,\-\s]+)/g)]
@@ -122,6 +129,20 @@ function parseClause(clause: string, ca: Ca, totalWeeks: number): ClauseResult {
       weeks: subtractWeeks(allWeeks, subtractWeeksList),
       kind: 'list',
     }
+  }
+
+  const stageMatch = matchStageSpecificWeeks(baseText, teachingMode, totalWeeks)
+  if (stageMatch) {
+    return {
+      matched: true,
+      neutral: false,
+      weeks: subtractWeeks(stageMatch.weeks, subtractWeeksList),
+      kind: stageMatch.kind,
+    }
+  }
+
+  if (containsStageSpecificWeeks(baseText)) {
+    return { matched: false, neutral: true, weeks: allWeeks, kind: 'all' }
   }
 
   const caRangeMatch = baseText.match(/ca\s*(\d+)\s*\(\s*hoc tu tuan\s*(\d+)\s*-\s*(\d+)\s*\)/)
@@ -209,6 +230,16 @@ function parseClause(clause: string, ca: Ca, totalWeeks: number): ClauseResult {
     }
   }
 
+  const hyphenListMatch = baseText.match(/hoc tuan\s*(\d+(?:\s*-\s*\d+){2,})/)
+  if (hyphenListMatch) {
+    return {
+      matched: true,
+      neutral: false,
+      weeks: subtractWeeks(parseDelimitedWeekList(hyphenListMatch[1], totalWeeks), subtractWeeksList),
+      kind: 'list',
+    }
+  }
+
   const rangeMatch = baseText.match(/hoc tuan\s*(\d+)\s*-\s*(\d+)/)
   if (rangeMatch) {
     return {
@@ -276,6 +307,20 @@ function splitClauses(note: string): string[] {
     .filter(Boolean)
 }
 
+function normalizeTeachingMode(value: string): 'lt' | 'th' | null {
+  const normalized = normalizeForMatching(value)
+
+  if (normalized === 'lt') {
+    return 'lt'
+  }
+
+  if (normalized === 'th') {
+    return 'th'
+  }
+
+  return null
+}
+
 function normalizeForMatching(value: string): string {
   return value
     .trim()
@@ -317,6 +362,11 @@ function parseWeekTokens(source: string, totalWeeks: number): number[] {
   return [...weeks].sort((left, right) => left - right)
 }
 
+function parseDelimitedWeekList(source: string, totalWeeks: number): number[] {
+  return [...new Set(source.split(/[-,]/).flatMap((token) => parseWeekTokens(token, totalWeeks)))]
+    .sort((left, right) => left - right)
+}
+
 function makeRange(startInput: string | number, endInput: string | number, totalWeeks: number): number[] {
   const start = clampWeek(Number.parseInt(String(startInput), 10), totalWeeks)
   const end = clampWeek(Number.parseInt(String(endInput), 10), totalWeeks)
@@ -342,4 +392,33 @@ function subtractWeeks(weeks: number[], removed: number[]): number[] {
 function intersectWeeks(left: number[], right: number[]): number[] {
   const rightSet = new Set(right)
   return left.filter((week) => rightSet.has(week))
+}
+
+function matchStageSpecificWeeks(
+  clause: string,
+  teachingMode: 'lt' | 'th' | null,
+  totalWeeks: number,
+): Pick<ClauseResult, 'weeks' | 'kind'> | null {
+  if (!teachingMode) {
+    return null
+  }
+
+  const matches = [...clause.matchAll(/hoc\s+(lt|th)\s+(?:tu\s+)?tuan\s*(\d+)\s*-\s*(\d+)/g)]
+  if (matches.length === 0) {
+    return null
+  }
+
+  const relevantMatch = matches.find((match) => match[1] === teachingMode)
+  if (!relevantMatch) {
+    return null
+  }
+
+  return {
+    weeks: makeRange(relevantMatch[2], relevantMatch[3], totalWeeks),
+    kind: 'range',
+  }
+}
+
+function containsStageSpecificWeeks(clause: string): boolean {
+  return /hoc\s+(lt|th)\s+(?:tu\s+)?tuan\s*\d+\s*-\s*\d+/.test(clause)
 }

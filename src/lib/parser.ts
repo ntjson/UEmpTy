@@ -171,6 +171,7 @@ export function parseTimetable({
           ca,
           config.totalWeeks,
           config.excludedWeeks,
+          fields.ltTh,
         )
 
         for (const message of weekResult.infoMessages) {
@@ -210,12 +211,13 @@ export function parseTimetable({
   const dedupedClasses = dedupeClasses(classes, warnings)
   emitConflictWarnings(dedupedClasses, warnings)
   const { rooms, buildings } = buildIndexes(dedupedClasses)
+  const dedupedWarnings = dedupeWarnings(warnings)
 
   return {
     classes: dedupedClasses,
     rooms,
     buildings,
-    warnings,
+    warnings: dedupedWarnings,
     parsedAt: new Date().toISOString(),
     sourceFileName,
     sourceFileHash,
@@ -550,13 +552,35 @@ function emitConflictWarnings(classes: Class[], warnings: ParseWarning[]) {
           row: left.sourceRow,
           maLHP: left.maLHP,
           message:
-            `Phát hiện trùng lịch phòng ${left.roomId} giữa ` +
-            `${left.maLHP} (dòng ${left.sourceRow}) và ${right.maLHP} (dòng ${right.sourceRow}) ` +
+            `Phát hiện trùng lịch phòng ${left.roomId} vào Thứ ${left.thu}, Ca ${left.ca} giữa ` +
+            `${left.maLHP} (${left.sourceSheet}, dòng ${left.sourceRow}) và ` +
+            `${right.maLHP} (${right.sourceSheet}, dòng ${right.sourceRow}) ` +
             `ở các tuần ${overlap.join(', ')}.`,
         })
       }
     }
   }
+}
+
+function dedupeWarnings(warnings: ParseWarning[]): ParseWarning[] {
+  const deduped = new Map<string, ParseWarning>()
+
+  for (const warning of warnings) {
+    const key = [
+      warning.severity,
+      warning.sheet,
+      warning.row,
+      warning.maLHP ?? '',
+      warning.ghiChu ?? '',
+      warning.message,
+    ].join('|')
+
+    if (!deduped.has(key)) {
+      deduped.set(key, warning)
+    }
+  }
+
+  return [...deduped.values()]
 }
 
 function buildIndexes(classes: Class[]): {

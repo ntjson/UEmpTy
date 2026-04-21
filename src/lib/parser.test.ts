@@ -73,6 +73,85 @@ describe('parseTimetable', () => {
     expect(parsed.warnings.some((warning) => warning.message.includes('ghi chú khác nhau'))).toBe(true)
   })
 
+  it('dedupes identical note-difference warnings when split ca rows merge across sheets', () => {
+    const workbook = XLSX.utils.book_new()
+    const header = [
+      'Lớp',
+      'Mã HP',
+      'Môn',
+      'TC',
+      'Mã LHP',
+      'Nhóm',
+      'LT/TH',
+      'Thứ',
+      'Ca',
+      'GĐ',
+      'GV',
+      'Ghi chú',
+    ]
+    const sheetOneRow = [
+      'K69A',
+      'INT2213',
+      'Mạng máy tính',
+      3,
+      'INT2213 1',
+      '',
+      'TH',
+      '6',
+      '1-2',
+      '105-B',
+      'GV A',
+      'Học tuần 1-4',
+    ]
+    const sheetTwoRow = [...sheetOneRow]
+    sheetTwoRow[11] = 'Học tuần 5-8'
+
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([header, sheetOneRow]), 'Sheet3')
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([header, sheetTwoRow]),
+      'KhoaCNTT',
+    )
+
+    const parsed = parseTimetable({
+      data: workbookToArrayBuffer(workbook),
+      sourceFileHash: 'fixture',
+      sourceFileName: 'fixture.xlsx',
+      config,
+    })
+
+    const noteDiffWarnings = parsed.warnings.filter((warning) =>
+      warning.message.includes('ghi chú khác nhau'),
+    )
+
+    expect(parsed.classes).toHaveLength(2)
+    expect(noteDiffWarnings).toHaveLength(1)
+  })
+
+  it('includes thu/ca and row references in room conflict warnings', () => {
+    const workbook = XLSX.utils.book_new()
+    const sheet = XLSX.utils.aoa_to_sheet([
+      ['Lớp', 'Mã HP', 'Môn', 'TC', 'Mã LHP', 'Nhóm', 'LT/TH', 'Thứ', 'Ca', 'GĐ', 'GV', 'Ghi chú'],
+      ['K69A', 'INT2213', 'Mạng máy tính', 3, 'INT2213 1', '', 'LT', '2', '1', '105-B', 'GV A', ''],
+      ['K69B', 'MAT1042', 'Giải tích', 3, 'MAT1042 1', '', 'LT', '2', '1', '105-B', 'GV B', ''],
+    ])
+
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Sheet3')
+
+    const parsed = parseTimetable({
+      data: workbookToArrayBuffer(workbook),
+      sourceFileHash: 'fixture',
+      sourceFileName: 'fixture.xlsx',
+      config,
+    })
+
+    const conflictWarning = parsed.warnings.find((warning) => warning.severity === 'error')
+
+    expect(conflictWarning?.message).toContain('Thứ 2, Ca 1')
+    expect(conflictWarning?.message).toContain('Sheet3, dòng 2')
+    expect(conflictWarning?.message).toContain('Sheet3, dòng 3')
+  })
+
   it('can parse the committed official workbook as a smoke test', () => {
     const workbookPath = path.resolve(process.cwd(), 'public/data/tkb-2025-2026-hk2.xlsx')
     const buffer = fs.readFileSync(workbookPath)
