@@ -83,7 +83,7 @@ function submitRoom() {
     </article>
 
     <article v-if="!store.hasData" class="panel px-5 py-5 text-sm text-dusk">
-      Chưa có dữ liệu để tra cứu. Hãy quay lại trang chủ và tải hoặc kiểm tra file thời khóa biểu.
+      Chưa có dữ liệu để tra cứu. Hãy quay lại trang chủ và kiểm tra bộ dữ liệu mặc định.
     </article>
 
     <RoomStatusCard

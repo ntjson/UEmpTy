@@ -68,7 +68,7 @@ const filteredRooms = computed(() =>
     </article>
 
     <article v-if="!store.hasData" class="panel px-5 py-5 text-sm text-dusk">
-      Chưa có dữ liệu để xếp hạng phòng trống. Hãy quay lại trang chủ để tải thời khóa biểu.
+      Chưa có dữ liệu để xếp hạng phòng trống. Hãy quay lại trang chủ để kiểm tra bộ dữ liệu mặc định.
     </article>
 
     <article

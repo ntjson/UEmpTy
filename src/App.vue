@@ -29,11 +29,6 @@ function openWarningsFromSettings() {
   store.setSettingsOpen(false)
   store.setWarningsOpen(true)
 }
-
-function restoreDefaultFromSettings() {
-  store.setSettingsOpen(false)
-  void store.restoreBundledSource()
-}
 </script>
 
 <template>
@@ -151,10 +146,8 @@ function restoreDefaultFromSettings() {
       :total-weeks="store.config?.totalWeeks ?? 0"
       :timezone="store.timezone"
       :warning-count="store.warningCount"
-      :has-session-source="store.activeSource === 'session'"
       @close="store.setSettingsOpen(false)"
       @open-warnings="openWarningsFromSettings"
-      @restore-default="restoreDefaultFromSettings"
     />
   </div>
 </template>

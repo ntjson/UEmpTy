@@ -6,13 +6,11 @@ defineProps<{
   totalWeeks: number
   timezone: string
   warningCount: number
-  hasSessionSource: boolean
 }>()
 
 const emit = defineEmits<{
   (event: 'close'): void
   (event: 'open-warnings'): void
-  (event: 'restore-default'): void
 }>()
 </script>
 
@@ -52,14 +50,6 @@ const emit = defineEmits<{
         <div class="flex flex-col gap-3 sm:flex-row">
           <button class="secondary-btn flex-1" type="button" @click="emit('open-warnings')">
             Xem {{ warningCount }} cảnh báo
-          </button>
-          <button
-            v-if="hasSessionSource"
-            class="primary-btn flex-1"
-            type="button"
-            @click="emit('restore-default')"
-          >
-            Dùng dữ liệu mặc định
           </button>
         </div>
       </div>

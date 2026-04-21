@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 
-import UploadCard from '@/components/UploadCard.vue'
 import { useTimetableStore } from '@/stores/timetable'
 
 const router = useRouter()
@@ -49,7 +48,7 @@ function openRoute(path: '/room' | '/empty') {
             {{ store.hasData ? 'Đã sẵn sàng tra cứu' : 'Chưa có dữ liệu thời khóa biểu' }}
           </p>
           <p class="mt-2">
-            {{ store.hasData ? store.sourceLabel : 'Hai nút tra cứu sẽ mở sau khi ứng dụng đọc được file .xlsx hợp lệ.' }}
+            {{ store.hasData ? store.sourceLabel : 'Hai nút tra cứu sẽ mở sau khi ứng dụng tải được bộ dữ liệu mặc định.' }}
           </p>
         </div>
       </article>
@@ -74,15 +73,5 @@ function openRoute(path: '/room' | '/empty') {
         </div>
       </article>
     </div>
-
-    <UploadCard :disabled="store.loading" @file-selected="store.loadUploadedFile" />
-
-    <article v-if="store.activeSource === 'session'" class="panel px-5 py-4 text-sm text-dusk">
-      Đang dùng dữ liệu tạm thời từ file bạn vừa tải lên. Bạn có thể quay lại bộ dữ liệu mặc định trong nút
-      <button class="font-semibold text-tide" type="button" @click="void store.restoreBundledSource()">
-        cài đặt dữ liệu
-      </button>
-      ở góc phải trên.
-    </article>
   </section>
 </template>

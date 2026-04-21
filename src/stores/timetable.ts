@@ -6,16 +6,12 @@ import { CACHE_VERSION, DEFAULT_WORKBOOK_PATH } from '@/lib/constants'
 import { deserializeParsedTimetable, parseTimetable, serializeParsedTimetable } from '@/lib/parser'
 import type { ParsedTimetable, SemesterConfig, SerializedParsedTimetable } from '@/lib/types'
 
-type ActiveSource = 'bundled' | 'session'
-
 export const useTimetableStore = defineStore('timetable', () => {
   const config = ref<SemesterConfig | null>(null)
   const timetable = ref<ParsedTimetable | null>(null)
   const loading = ref(false)
   const bootstrapped = ref(false)
   const errorMessage = ref('')
-  const activeSource = ref<ActiveSource>('bundled')
-  const sessionFileName = ref<string | null>(null)
   const selectedDate = ref('')
   const selectedTime = ref('')
   const warningsOpen = ref(false)
@@ -46,10 +42,6 @@ export const useTimetableStore = defineStore('timetable', () => {
   const sourceLabel = computed(() => {
     if (!timetable.value) {
       return 'Chưa tải dữ liệu'
-    }
-
-    if (activeSource.value === 'session') {
-      return `Tệp tạm thời: ${sessionFileName.value ?? timetable.value.sourceFileName}`
     }
 
     return `Tệp mặc định: ${timetable.value.sourceFileName}`
@@ -95,31 +87,9 @@ export const useTimetableStore = defineStore('timetable', () => {
       const buffer = await response.arrayBuffer()
       const parsed = await parseBuffer(buffer, fileName)
       timetable.value = parsed
-      activeSource.value = 'bundled'
-      sessionFileName.value = null
     } catch (error) {
       errorMessage.value = toErrorMessage(error, 'Không thể tải file thời khóa biểu mặc định.')
       timetable.value = null
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function loadUploadedFile(file: File) {
-    ensureConfig()
-    loading.value = true
-    errorMessage.value = ''
-
-    try {
-      const buffer = await file.arrayBuffer()
-      timetable.value = await parseBuffer(buffer, file.name)
-      activeSource.value = 'session'
-      sessionFileName.value = file.name
-    } catch (error) {
-      errorMessage.value = toErrorMessage(
-        error,
-        'Không đọc được file. Vui lòng kiểm tra định dạng .xlsx.',
-      )
     } finally {
       loading.value = false
     }
@@ -149,10 +119,6 @@ export const useTimetableStore = defineStore('timetable', () => {
 
   function setSettingsOpen(value: boolean) {
     settingsOpen.value = value
-  }
-
-  async function restoreBundledSource() {
-    await loadBundledWorkbook()
   }
 
   async function parseBuffer(buffer: ArrayBuffer, fileName: string) {
@@ -204,7 +170,6 @@ export const useTimetableStore = defineStore('timetable', () => {
   }
 
   return {
-    activeSource,
     bootstrapped,
     buildingOptions,
     config,
@@ -213,7 +178,6 @@ export const useTimetableStore = defineStore('timetable', () => {
     loading,
     queryDateTime,
     resetToNow,
-    restoreBundledSource,
     roomOptions,
     selectedDate,
     selectedTime,
@@ -228,7 +192,6 @@ export const useTimetableStore = defineStore('timetable', () => {
     warningCount,
     warningsOpen,
     bootstrap,
-    loadUploadedFile,
   }
 })
 
