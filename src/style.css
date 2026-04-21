@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(15, 139, 141, 0.18), transparent 30%),
+    radial-gradient(circle at top right, rgba(196, 69, 54, 0.16), transparent 24%),
+    linear-gradient(180deg, #f6fbfb 0%, #edf4f7 42%, #f4efe5 100%);
+  color: #173249;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: transparent;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply antialiased;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Bahnschrift', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  }
+
+  .panel {
+    @apply rounded-[28px] border border-white/70 bg-white/80 shadow-panel backdrop-blur;
+  }
+
+  .field-block {
+    @apply flex flex-col gap-2 text-sm font-medium text-dusk;
+  }
+
+  .field-input {
+    @apply h-[46px] rounded-2xl border border-ink/10 bg-white/90 px-4 text-ink outline-none transition focus:border-tide focus:ring-2 focus:ring-tide/20;
+  }
+
+  .primary-btn {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-ink px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-tide disabled:cursor-not-allowed disabled:bg-dusk/40;
+  }
+
+  .secondary-btn {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-ink/10 bg-white/85 px-5 py-3 font-semibold text-ink transition hover:-translate-y-0.5 hover:border-tide/40 hover:text-tide disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .icon-button {
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-ink/10 bg-white/80 text-lg text-ink transition hover:border-tide/40 hover:text-tide;
+  }
+
+  .chip-button {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-ink/10 px-4 py-2 font-semibold transition;
+  }
+
+  .chip-button-active {
+    @apply border-transparent bg-ink text-white shadow-lg;
+  }
+
+  .chip-button-muted {
+    @apply bg-white/80 text-ink hover:border-tide/40 hover:text-tide;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold;
+  }
+
+  .sheet-backdrop {
+    @apply fixed inset-0 z-40 bg-ink/35 px-3 py-6 backdrop-blur-sm;
+  }
+
+  .sheet-panel {
+    @apply panel mx-auto flex max-h-full w-full max-w-2xl flex-col overflow-hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
