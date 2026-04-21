@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
+import headerLogoUrl from '../logo.png'
 
 import SettingsPanel from '@/components/SettingsPanel.vue'
 import WarningsDrawer from '@/components/WarningsDrawer.vue'
@@ -37,11 +38,13 @@ function openWarningsFromSettings() {
       <header class="panel mb-4 overflow-hidden">
         <div class="flex items-center justify-between gap-4 border-b border-white/50 px-5 py-4">
           <div class="flex items-center gap-3">
-            <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink text-lg font-semibold text-white shadow-lg"
-            >
-              U
-            </div>
+            <img
+              :src="headerLogoUrl"
+              alt="Logo Trường Đại học Công nghệ, ĐHQGHN"
+              class="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14"
+              width="56"
+              height="56"
+            />
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.24em] text-dusk/70">
                 ĐHQGHN • Trường Đại học Công nghệ
